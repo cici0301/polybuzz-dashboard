@@ -71,19 +71,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   <!-- KPI 卡片 -->
   <div class="kpi-row">
     <div class="kpi-card c1"><div class="label">提报达人总数</div><div class="value" id="kpi-submitted">-</div><div class="sub">全部提报红人</div></div>
+    <div class="kpi-card c8"><div class="label">客户选中</div><div class="value" id="kpi-selected">-</div><div class="sub" id="kpi-selected-sub"></div></div>
     <div class="kpi-card c2"><div class="label">确认合作数</div><div class="value" id="kpi-confirmed">-</div><div class="sub" id="kpi-confirmed-sub"></div></div>
     <div class="kpi-card c3"><div class="label">选中率</div><div class="value" id="kpi-rate-sel">-</div><div class="sub" id="kpi-rate-sel-sub"></div></div>
     <div class="kpi-card c4"><div class="label">确认对客总额</div><div class="value" id="kpi-conf-client">-</div><div class="sub">USD</div></div>
     <div class="kpi-card c7"><div class="label">确认总成本</div><div class="value" id="kpi-conf-cost">-</div><div class="sub">USD</div></div>
     <div class="kpi-card c2"><div class="label">确认总利润</div><div class="value" id="kpi-conf-profit">-</div><div class="sub">USD</div></div>
     <div class="kpi-card c3"><div class="label">确认平均利润率</div><div class="value" id="kpi-conf-rate">-</div><div class="sub" id="kpi-conf-rate-sub"></div></div>
-    <div class="kpi-card c8"><div class="label">客户选中</div><div class="value" id="kpi-selected">-</div><div class="sub" id="kpi-selected-sub"></div></div>
   </div>
 
   <!-- Row 1: 国家漏斗 + 选中率 -->
   <div class="chart-row">
     <div class="chart-card"><h3>各国 提报→选中→确认 漏斗</h3><div class="chart-wrap"><canvas id="chart-funnel"></canvas></div></div>
-    <div class="chart-card"><h3>各国选中率 (%)</h3><div class="chart-wrap"><canvas id="chart-select-rate"></canvas></div></div>
+    <div class="chart-card"><h3>各国确认合作率(%)</h3><div class="chart-wrap"><canvas id="chart-select-rate"></canvas></div></div>
   </div>
 
   <!-- Row 2: 确认合作明细 + 利润对比 -->
@@ -269,18 +269,18 @@ function renderAllCharts() {
     }
   });
 
-  // 2. 各国选中率（客户选中/提报）
+  // 2. 各国确认合作率（确认/选中）
   dc('chart-select-rate');
   var ctx2 = document.getElementById('chart-select-rate').getContext('2d');
-  var srRates = countries.map(function(c){ return c.selRate; });
-  var srColors = countries.map(function(c){ return CC[c.name] || '#999'; });
+  var crRates = countries.map(function(c){ return c.selected > 0 ? c.confRate : 0; });
+  var crColors = countries.map(function(c){ return CC[c.name] || '#999'; });
   charts['chart-select-rate'] = new Chart(ctx2, {
     type: 'bar',
-    data: { labels: cn, datasets: [{ label: '选中率 (%)', data: srRates, backgroundColor: srColors, borderRadius: 5, borderSkipped: false }] },
+    data: { labels: cn, datasets: [{ label: '确认率 (%)', data: crRates, backgroundColor: crColors, borderRadius: 5, borderSkipped: false }] },
     options: {
       responsive: true, maintainAspectRatio: true,
       plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, max: Math.ceil(Math.max.apply(null, srRates) / 5) * 5 + 5, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
+      scales: { y: { beginAtZero: true, max: Math.ceil(Math.max.apply(null, crRates) / 5) * 5 + 5, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
     }
   });
 
