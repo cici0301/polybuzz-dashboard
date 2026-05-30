@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PolyBuzz 综合数据看板</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #1a1a2e; }
+.header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: #fff; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
+.header h1 { font-size: 22px; font-weight: 600; }
+.header .subtitle { font-size: 13px; opacity: 0.7; margin-top: 4px; }
+.btn { padding: 7px 16px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; font-size: 12px; color: #fff; background: transparent; transition: all .2s; }
+.btn:hover { background: rgba(255,255,255,0.1); }
+.container { max-width: 1440px; margin: 0 auto; padding: 20px; }
+
+/* KPI Cards */
+.kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 16px; }
+.kpi-card { background: #fff; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border-left: 3px solid #667eea; }
+.kpi-card .label { font-size: 11px; color: #888; margin-bottom: 6px; letter-spacing: 0.3px; }
+.kpi-card .value { font-size: 22px; font-weight: 700; }
+.kpi-card .sub { font-size: 11px; color: #aaa; margin-top: 3px; }
+.kpi-card.c1 { border-left-color: #4e79a7; } .kpi-card.c1 .value { color: #4e79a7; }
+.kpi-card.c2 { border-left-color: #59a14f; } .kpi-card.c2 .value { color: #59a14f; }
+.kpi-card.c3 { border-left-color: #f28e2b; } .kpi-card.c3 .value { color: #f28e2b; }
+.kpi-card.c4 { border-left-color: #e15759; } .kpi-card.c4 .value { color: #e15759; }
+.kpi-card.c5 { border-left-color: #76b7b2; } .kpi-card.c5 .value { color: #76b7b2; }
+.kpi-card.c6 { border-left-color: #b07aa1; } .kpi-card.c6 .value { color: #b07aa1; }
+.kpi-card.c7 { border-left-color: #ff9da7; } .kpi-card.c7 .value { color: #e15759; }
+.kpi-card.c8 { border-left-color: #9c755f; } .kpi-card.c8 .value { color: #9c755f; }
+.kpi-card.c9 { border-left-color: #4e79a7; } .kpi-card.c9 .value { color: #4e79a7; }
+.kpi-card.c10 { border-left-color: #59a14f; } .kpi-card.c10 .value { color: #59a14f; }
+
+/* Charts */
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.chart-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.chart-card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.chart-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #333; }
+.chart-card .chart-wrap { position: relative; width: 100%; }
+.chart-card .chart-wrap canvas { max-height: 300px; }
+
+/* Table inside cards */
+.mini-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mini-table th { background: #f8f9fa; padding: 8px 10px; text-align: left; font-weight: 600; color: #555; border-bottom: 2px solid #e0e0e0; font-size: 11px; }
+.mini-table td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
+.mini-table tr:hover td { background: #fafbfc; }
+.mini-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.mini-table .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+.mini-table .tag.yes { background: #e8f5e9; color: #2e7d32; }
+.mini-table .tag.no { background: #f5f5f5; color: #999; }
+
+.data-note { margin-top: 12px; font-size: 11px; color: #bbb; text-align: center; padding: 12px; }
+.data-note a { color: #667eea; }
+
+@media (max-width: 1400px) { .kpi-row { grid-template-columns: repeat(4, 1fr); } .chart-row.triple { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } .chart-row, .chart-row.triple { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>PolyBuzz 综合数据看板</h1>
+    <div class="subtitle">截至 2026.5.30 · 累计数据看板</div>
+  </div>
+  <div>
+    <button class="btn" onclick="window.open('https://thothstars.feishu.cn/base/JVwqbhwmPa93E4s3ZjscU6OAnXf?table=tblcifZWe6sX5UJ7')">飞书提报表</button>
+    <button class="btn" onclick="window.print()" style="margin-left:8px">打印 / PDF</button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- KPI 卡片 -->
+  <div class="kpi-row">
+    <div class="kpi-card c1"><div class="label">提报达人总数</div><div class="value" id="kpi-submitted">-</div><div class="sub">全部提报红人</div></div>
+    <div class="kpi-card c8"><div class="label">客户选中</div><div class="value" id="kpi-selected">-</div><div class="sub" id="kpi-selected-sub"></div></div>
+    <div class="kpi-card c2"><div class="label">确认合作数</div><div class="value" id="kpi-confirmed">-</div><div class="sub" id="kpi-confirmed-sub"></div></div>
+    <div class="kpi-card c3"><div class="label">选中率</div><div class="value" id="kpi-rate-sel">-</div><div class="sub" id="kpi-rate-sel-sub"></div></div>
+    <div class="kpi-card c4"><div class="label">确认对客总额</div><div class="value" id="kpi-conf-client">-</div><div class="sub">USD</div></div>
+    <div class="kpi-card c7"><div class="label">确认总成本</div><div class="value" id="kpi-conf-cost">-</div><div class="sub">USD</div></div>
+    <div class="kpi-card c2"><div class="label">确认总利润</div><div class="value" id="kpi-conf-profit">-</div><div class="sub">USD</div></div>
+    <div class="kpi-card c3"><div class="label">确认平均利润率</div><div class="value" id="kpi-conf-rate">-</div><div class="sub" id="kpi-conf-rate-sub"></div></div>
+        <div class="kpi-card c9"><div class="label">本周新增确认金额</div><div class="value" id="kpi-week-client">-</div><div class="sub" id="kpi-week-client-sub"></div></div>
+        <div class="kpi-card c10"><div class="label">本周新增利润</div><div class="value" id="kpi-week-profit">-</div><div class="sub" id="kpi-week-profit-sub"></div></div>
+  </div>
+
+  <!-- Row 1: 国家漏斗 + 选中率 -->
+  <div class="chart-row">
+    <div class="chart-card"><h3>各国 提报→选中→确认 漏斗</h3><div class="chart-wrap"><canvas id="chart-funnel"></canvas></div></div>
+    <div class="chart-card"><h3>各国确认合作率(%)</h3><div class="chart-wrap"><canvas id="chart-select-rate"></canvas></div></div>
+  </div>
+
+  <!-- Row 2: 确认合作明细 + 利润对比 -->
+  <div class="chart-row">
+    <div class="chart-card">
+      <h3>确认合作明细（7 笔）</h3>
+      <div style="overflow-x:auto">
+        <table class="mini-table" id="confirmed-table">
+          <thead><tr><th>国家</th><th>Handle</th><th class="num">最终成本</th><th class="num">对客价</th><th class="num">利润</th><th class="num">利润率</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="chart-card"><h3>确认合作 利润 vs 成本 vs 对客</h3><div class="chart-wrap"><canvas id="chart-conf-detail"></canvas></div></div>
+  </div>
+
+  <!-- Row 3: 各国确认利润 + 提报vs确认对比 -->
+  <div class="chart-row">
+    <div class="chart-card"><h3>各国确认利润分布</h3><div class="chart-wrap"><canvas id="chart-country-conf"></canvas></div></div>
+    <div class="chart-card"><h3>选中 vs 确认 对客金额</h3><div class="chart-wrap"><canvas id="chart-sub-vs-conf"></canvas></div></div>
+  </div>
+
+  <div class="data-note">
+    提报数据: <span id="footer-submitted"></span>条 · 确认合作: <span id="footer-confirmed"></span>条 · 选中率: <span id="footer-rate"></span>% · 更新时间: <span id="update-time"></span>
+    &nbsp;|&nbsp; <a href="https://thothstars.feishu.cn/base/JVwqbhwmPa93E4s3ZjscU6OAnXf?table=tblcifZWe6sX5UJ7" target="_blank">飞书提报表</a>
+  </div>
+</div>
+
+<script>
+var _chartReady = false, _chartMetrics = null;
+(function(){
+  var CDNS = [
+    'https://cdn.bootcdn.net/ajax/libs/Chart.js/4.4.0/chart.umd.min.js',
+    'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+    'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js',
+  ];
+  function tryLoad(i) {
+    if (i >= CDNS.length) {
+      document.querySelectorAll('.chart-wrap').forEach(function(el) {
+        el.innerHTML = '<p style="text-align:center;padding:40px;color:#999">图表库加载失败，请检查网络后刷新</p>';
+      });
+      return;
+    }
+    var s = document.createElement('script');
+    s.src = CDNS[i];
+    s.onload = function() { _chartReady = true; if (_chartMetrics) renderAllCharts(_chartMetrics); };
+    s.onerror = function() { tryLoad(i + 1); };
+    document.head.appendChild(s);
+  }
+  tryLoad(0);
+})();
+
+// ===== 嵌入合并数据 =====
+const D = {"summary":{"totalSubmitted":113,"totalClientSelected":43,"totalConfirmed":10,"selectedRate":38.1,"confirmedRate":23.3,"overallRate":8.8,"selTotalClient":340231.6,"confTotalClient":20750,"confTotalCost":12419,"confTotalProfit":4999,"confAvgRate":25.4,"confRateMin":15,"confRateMax":44,"weekNewClient":0,"weekNewProfit":0,"weekNewCount":0},"byCountry":[{"name":"美国","submitted":15,"selected":2,"confirmed":1,"selClient":10000,"confClient":2200,"confCost":1250,"confProfit":570,"selRate":13.3,"confRate":50},{"name":"日本","submitted":51,"selected":21,"confirmed":5,"selClient":64441.6,"confClient":9250,"confCost":4979,"confProfit":2563,"selRate":41.2,"confRate":23.8},{"name":"加拿大","submitted":3,"selected":1,"confirmed":0,"selClient":4000,"confClient":0,"confCost":0,"confProfit":0,"selRate":33.3,"confRate":0},{"name":"德国","submitted":23,"selected":12,"confirmed":3,"selClient":237790,"confClient":6800,"confCost":4690,"confProfit":1266,"selRate":52.2,"confRate":25},{"name":"阿联酋","submitted":1,"selected":0,"confirmed":0,"selClient":0,"confClient":0,"confCost":0,"confProfit":0,"selRate":0,"confRate":0},{"name":"澳大利亚","submitted":3,"selected":2,"confirmed":0,"selClient":16000,"confClient":0,"confCost":0,"confProfit":0,"selRate":66.7,"confRate":0},{"name":"英国","submitted":6,"selected":0,"confirmed":0,"selClient":0,"confClient":0,"confCost":0,"confProfit":0,"selRate":0,"confRate":0},{"name":"塞尔维亚","submitted":1,"selected":0,"confirmed":0,"selClient":0,"confClient":0,"confCost":0,"confProfit":0,"selRate":0,"confRate":0},{"name":"意大利","submitted":4,"selected":2,"confirmed":0,"selClient":2700,"confClient":0,"confCost":0,"confProfit":0,"selRate":50,"confRate":0},{"name":"法国","submitted":5,"selected":3,"confirmed":1,"selClient":5300,"confClient":2500,"confCost":1500,"confProfit":600,"selRate":60,"confRate":33.3},{"name":"","submitted":1,"selected":0,"confirmed":0,"selClient":0,"confClient":0,"confCost":0,"confProfit":0,"selRate":0,"confRate":0}],"records":[{"handle":"ViniiTube","country":"美国","type":"二次元","format":"YTB 植入","followers":"1130","avgViews":"27","costNum":1000,"toClientNum":1800,"profitNum":3,"profitRateNum":33,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"Zhoniin","country":"美国","type":"动漫","format":"YTB 植入","followers":"304","avgViews":"34","costNum":300,"toClientNum":1000,"profitNum":4,"profitRateNum":44,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"jetski","country":"美国","type":"游戏","format":"YTB 植入","followers":"1500","avgViews":"140","costNum":6500,"toClientNum":9000,"profitNum":5,"profitRateNum":55,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"StateHuman","country":"美国","type":"动漫","format":"YTB 植入","followers":"65300","avgViews":"489","costNum":2000,"toClientNum":5000,"profitNum":6,"profitRateNum":66,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"Shawn Stokes","country":"美国","type":"游戏","format":"YTB 植入","followers":"1390","avgViews":"80","costNum":2000,"toClientNum":4000,"profitNum":7,"profitRateNum":77,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"ankoru5","country":"日本","type":"颜值","format":"TT","followers":"490","avgViews":"48","costNum":446,"toClientNum":1500,"profitNum":8,"profitRateNum":88,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"malory_ll","country":"日本","type":"cos","format":"TT","followers":"16","avgViews":"12","costNum":160,"toClientNum":800,"profitNum":9,"profitRateNum":99,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"tesesaku","country":"日本","type":"剧情演绎 搞笑","format":"TT","followers":"882","avgViews":"500","costNum":15900,"toClientNum":18000,"profitNum":10,"profitRateNum":1010,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"tamasoi7","country":"日本","type":"声优 二次元","format":"TT","followers":"441","avgViews":"70","costNum":1600,"toClientNum":2000,"profitNum":11,"profitRateNum":1111,"finalPush":"推进","isClientSelected":true,"isConfirmed":true,"confCost":1000,"confClient":2000,"confProfit":600,"confRate":30},{"handle":"babyslow315","country":"日本","type":"AI洛丽塔","format":"TT","followers":"1300","avgViews":"128","costNum":5000,"toClientNum":5500,"profitNum":12,"profitRateNum":1212,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"Sukunists","country":"美国","type":"动漫","format":"YTB 植入","followers":"38","avgViews":"84","costNum":2000,"toClientNum":3000,"profitNum":13,"profitRateNum":1313,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"oshi_kano","country":"日本","type":"夫妻","format":"TT","followers":"461","avgViews":"165","costNum":3256,"toClientNum":2400,"profitNum":14,"profitRateNum":1414,"finalPush":"推进","isClientSelected":true,"isConfirmed":true,"confCost":1500,"confClient":2400,"confProfit":540,"confRate":23},{"handle":"yutamiworld","country":"日本","type":"情侣日常","format":"INS Reel,TT","followers":"TT：282\nINS：61","avgViews":"TT：328\nINS：160","costNum":2107,"toClientNum":3500,"profitNum":15,"profitRateNum":1515,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"iamainan","country":"日本","type":"友情；日常","format":"TT","followers":"454","avgViews":"112","costNum":950,"toClientNum":2000,"profitNum":16,"profitRateNum":1616,"finalPush":"推进","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"nekokokokosinako","country":"日本","type":"生活分享","format":"TT","followers":"47","avgViews":"21","costNum":1900,"toClientNum":3200,"profitNum":17,"profitRateNum":1717,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"hitori_ok0","country":"日本","type":"大学生日常","format":"TT","followers":"73","avgViews":"42","costNum":2230,"toClientNum":3600,"profitNum":18,"profitRateNum":1818,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"haru_onestep11","country":"日本","type":"剧情演绎","format":"TT","followers":"68","avgViews":"103","costNum":510,"toClientNum":1500,"profitNum":19,"profitRateNum":1919,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"nanocaleb","country":"日本","type":"情侣日常 搞笑生活","format":"TT","followers":"889","avgViews":"721","costNum":3820,"toClientNum":6200,"profitNum":20,"profitRateNum":2020,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"makokooo","country":"日本","type":"情侣","format":"TT","followers":"61","avgViews":"81","costNum":634,"toClientNum":1600,"profitNum":21,"profitRateNum":2121,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"_rikamania_","country":"日本","type":"恋爱/MBTI/心理分析","format":"TT","followers":"51","avgViews":"32","costNum":317,"toClientNum":1500,"profitNum":22,"profitRateNum":2222,"finalPush":"推进","isClientSelected":true,"isConfirmed":true,"confCost":400,"confClient":1500,"confProfit":660,"confRate":44},{"handle":"rmy1208","country":"日本","type":"恋爱话题","format":"TT","followers":"552","avgViews":"85","costNum":2500,"toClientNum":231.6,"profitNum":23,"profitRateNum":2323,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"watchmi_yu","country":"日本","type":"恋爱话题 日常吐槽","format":"TT","followers":"70","avgViews":"465","costNum":2000,"toClientNum":241.6,"profitNum":24,"profitRateNum":2424,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"sh__ddney","country":"日本","type":"恋爱青春 剧情演绎","format":"TT","followers":"758","avgViews":"400","costNum":12550,"toClientNum":15000,"profitNum":25,"profitRateNum":2525,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"citron1120","country":"日本","type":"日常","format":"TT","followers":"71.8","avgViews":"250","costNum":823,"toClientNum":1100,"profitNum":26,"profitRateNum":2626,"finalPush":"推进","isClientSelected":true,"isConfirmed":true,"confCost":510,"confClient":1100,"confProfit":354,"confRate":32},{"handle":"AlanaASMRyt","country":"加拿大","type":"ASMR","format":"YTB 植入","followers":"265","avgViews":"56","costNum":2800,"toClientNum":4000,"profitNum":27,"profitRateNum":2727,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"dorisxchi","country":"美国","type":"动画reaction","format":"YTB 植入","followers":"1060","avgViews":"260","costNum":5000,"toClientNum":7000,"profitNum":28,"profitRateNum":2828,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"meguchandesu","country":"日本","type":"2.5次元歌手","format":"TT","followers":"54","avgViews":"5","costNum":50,"toClientNum":600,"profitNum":29,"profitRateNum":2929,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"fhlouwn","country":"德国","type":"泛娱乐/生活方式","format":"TT","followers":"2400","avgViews":"50","costNum":1100,"toClientNum":2000,"profitNum":30,"profitRateNum":3030,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"momonews","country":"德国","type":"家庭/情侣日常","format":"TT","followers":"546","avgViews":"430","costNum":2555,"toClientNum":4000,"profitNum":31,"profitRateNum":3131,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"nicole.umut","country":"德国","type":"情侣/搞笑","format":"TT","followers":"22","avgViews":"20","costNum":930,"toClientNum":2000,"profitNum":32,"profitRateNum":3232,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"mari0607_mg","country":"日本","type":"cos变装","format":"TT","followers":"1500","avgViews":"201","costNum":1887,"toClientNum":3750,"profitNum":33,"profitRateNum":3333,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"lenny_mikuta","country":"德国","type":"情侣","format":"TT","followers":"63.5","avgViews":"108","costNum":1164,"toClientNum":2500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":true,"confCost":1100,"confClient":2000,"confProfit":540,"confRate":27},{"handle":"srb_offiziell","country":"德国","type":"情侣","format":"TT","followers":"280","avgViews":"82","costNum":4000,"toClientNum":5000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"frecklesasmr","country":"德国","type":"ASMR","format":"YTB 植入","followers":"289","avgViews":"56","costNum":3000,"toClientNum":200090,"profitNum":0,"profitRateNum":0,"finalPush":"推进 ","isClientSelected":true,"isConfirmed":true,"confCost":1500,"confClient":2000,"confProfit":300,"confRate":15},{"handle":"noripon.channel","country":"日本","type":"情侣","format":"TT","followers":"508","avgViews":"265","costNum":3776,"toClientNum":4000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"dmarkxobaddie","country":"美国","type":"情侣","format":"INS Reel","followers":"197","avgViews":"12","costNum":700,"toClientNum":1200,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"jaygonalwaysputakonit","country":"美国","type":"情侣","format":"TT","followers":"1900","avgViews":"30","costNum":400,"toClientNum":2500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"chrisncrystal14","country":"美国","type":"情侣","format":"TT","followers":"1800","avgViews":"28","costNum":1800,"toClientNum":3000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"dfigz","country":"美国","type":"情侣","format":"TT","followers":"285","avgViews":"83","costNum":2500,"toClientNum":3500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"therealqueenandken","country":"加拿大","type":"情侣","format":"TT","followers":"307","avgViews":"27","costNum":700,"toClientNum":1500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"melimtx","country":"阿联酋","type":"运动 身材","format":"INS Reel","followers":"4863","avgViews":"1100","costNum":5231,"toClientNum":10000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"canselxguel","country":"德国","type":"情景演绎","format":"TT","followers":"1000","avgViews":"41","costNum":1743,"toClientNum":2500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"BillyHan","country":"美国","type":"卡通娱乐","format":"YTB short","followers":"1730","avgViews":"322","costNum":3500,"toClientNum":5000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"marumo666","country":"日本","type":"抽象 二次元","format":"TT","followers":"182","avgViews":"199","costNum":1600,"toClientNum":2250,"profitNum":0,"profitRateNum":0,"finalPush":"推进","isClientSelected":true,"isConfirmed":true,"confCost":1569,"confClient":2250,"confProfit":409,"confRate":18},{"handle":"KuBiLab","country":"日本","type":"自制动画 音乐","format":"YTB 定制","followers":"44.5","avgViews":"80","costNum":2750,"toClientNum":4500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"darayunya","country":"日本","type":"lifestyle","format":"INS Reel","followers":"57","avgViews":"14","costNum":450,"toClientNum":1200,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"nickandcarrie","country":"澳大利亚","type":"couple","format":"TT","followers":"10100","avgViews":"297","costNum":20000,"toClientNum":15000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"noripon1003","country":"日本","type":"couple","format":"YTB 植入","followers":"1250","avgViews":"135","costNum":7500,"toClientNum":8000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"tee_official01","country":"英国","type":"剧情 搞怪","format":"TT","followers":"292","avgViews":"21","costNum":400,"toClientNum":1000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"the_relationship_hub","country":"英国","type":"meme","format":"TT","followers":"1200","avgViews":"718","costNum":500,"toClientNum":2500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"o4mqrie","country":"德国","type":"lifestyle","format":"TT","followers":"295","avgViews":"171","costNum":1400,"toClientNum":3000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"joshandjem","country":"英国","type":"couple","format":"TT","followers":"439","avgViews":"85","costNum":1162,"toClientNum":2400,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"viktorandria","country":"英国","type":"couple","format":"TT","followers":"672","avgViews":"80","costNum":7000,"toClientNum":8000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"stefani_priscilla","country":"德国","type":"couple","format":"TT","followers":"408","avgViews":"193","costNum":1859,"toClientNum":0,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"scarletvas","country":"澳大利亚","type":"情景剧","format":"TT","followers":"7300","avgViews":"49","costNum":4000,"toClientNum":4000,"profitNum":0,"profitRateNum":0,"finalPush":"婉拒吧，IG互动低，买量嫌疑重","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"mattycardarople","country":"美国","type":"pov","format":"TT","followers":"1500","avgViews":"41","costNum":3000,"toClientNum":4000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"nutshellanimations","country":"加拿大","type":"漫画","format":"TT","followers":"24400","avgViews":"400","costNum":7500,"toClientNum":8500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"jamesjacobs0n","country":"美国","type":"剧情","format":"TT","followers":"580","avgViews":"722","costNum":2000,"toClientNum":5000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"thatdunya","country":"塞尔维亚","type":"pov","format":"INS Reel","followers":"41","avgViews":"89","costNum":2000,"toClientNum":3200,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"marleysimsbrwn","country":"英国","type":"体育生","format":"TT","followers":"38","avgViews":"21","costNum":1343,"toClientNum":2000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"dialgakun","country":"日本","type":"剪辑","format":"TT","followers":"31","avgViews":"257","costNum":188,"toClientNum":1500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"originalmaham","country":"英国","type":"couple","format":"TT","followers":"118","avgViews":"266","costNum":2955,"toClientNum":4000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"tarochaaandayo","country":"日本","type":"pov","format":"TT","followers":"163","avgViews":"17","costNum":943,"toClientNum":1500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"clowcos","country":"日本","type":"cos","format":"INS Reel,TT","followers":"57","avgViews":"20","costNum":1500,"toClientNum":2500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"torapin0401","country":"日本","type":"couple","format":"TT","followers":"431","avgViews":"212","costNum":4400,"toClientNum":6000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"himawari_akiba","country":"日本","type":"二次元插画","format":"TT","followers":"73","avgViews":"112","costNum":500,"toClientNum":1800,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"mashudayo","country":"日本","type":"健身","format":"TT","followers":"1100","avgViews":"64","costNum":3000,"toClientNum":4000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"r_nen7","country":"日本","type":"pov","format":"TT","followers":"13","avgViews":"10","costNum":314,"toClientNum":1000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"yeuyeutp","country":"德国","type":"couple","format":"INS Reel,TT","followers":"122+53","avgViews":"16+35","costNum":580,"toClientNum":2000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"roryeliza","country":"澳大利亚","type":"pov","format":"TT","followers":"7200","avgViews":"123","costNum":12000,"toClientNum":12000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"jaymee_gr","country":"德国","type":"pov","format":"TT","followers":"21","avgViews":"5.8","costNum":464,"toClientNum":1000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"vito_q","country":"意大利","type":"couple","format":"TT","followers":"62.8","avgViews":"80","costNum":1160,"toClientNum":2400,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"massicande","country":"意大利","type":"动漫 体育","format":"TT","followers":"238.5","avgViews":"16","costNum":696,"toClientNum":900,"profitNum":0,"profitRateNum":0,"finalPush":"近期播放太差，350已经是最高了","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"fox_andrea90","country":"意大利","type":"couple","format":"TT","followers":"82.2","avgViews":"21","costNum":1218,"toClientNum":1800,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"DaRealScrunchy","country":"美国","type":"动漫","format":"YTB 植入","followers":"214","avgViews":"20","costNum":931,"toClientNum":1800,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"anonymous_10314","country":"日本","type":"街头拍照","format":"TT","followers":"1400","avgViews":"137","costNum":8800,"toClientNum":10000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"Kick11LIVE","country":"德国","type":"体育","format":"YTB 植入","followers":"21.1","avgViews":"58","costNum":4500,"toClientNum":6000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"trvstedsamy","country":"德国","type":"娱乐 volg","format":"TT","followers":"698","avgViews":"230","costNum":2911,"toClientNum":2800,"profitNum":0,"profitRateNum":0,"finalPush":"推进","isClientSelected":true,"isConfirmed":true,"confCost":2090,"confClient":2800,"confProfit":426,"confRate":15},{"handle":"mashurumu","country":"日本","type":"游戏实况娱乐博主 - 三人组","format":"TT","followers":"42","avgViews":"40","costNum":1258,"toClientNum":2500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"aleandra.mts","country":"德国","type":"情侣","format":"TT","followers":"78","avgViews":"60","costNum":930,"toClientNum":2800,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"donmai.ch","country":"日本","type":"日常喜剧","format":"TT","followers":"71","avgViews":"47","costNum":600,"toClientNum":2500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"veronicaealessio.game","country":"意大利","type":"Couple","format":"TT","followers":"30.7","avgViews":"14","costNum":465,"toClientNum":1000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"pochita.0923","country":"日本","type":"情侣 抽象 剧情","format":"TT","followers":"651","avgViews":"578","costNum":11932,"toClientNum":13500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"skr_mtt","country":"日本","type":"POV 恋爱短剧","format":"TT","followers":"164","avgViews":"50","costNum":628,"toClientNum":1200,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"antonakkis","country":"德国","type":"娱乐 街头采访","format":"TT","followers":"327.5","avgViews":"17","costNum":1327,"toClientNum":1800,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"plpeyy","country":"法国","type":"娱乐；情侣挑战","format":"TT","followers":"281","avgViews":"212","costNum":2327,"toClientNum":2500,"profitNum":0,"profitRateNum":0,"finalPush":"推进","isClientSelected":true,"isConfirmed":true,"confCost":1500,"confClient":2500,"confProfit":600,"confRate":24},{"handle":"hakimmprime","country":"德国","type":"颜值 娱乐","format":"TT","followers":"11000","avgViews":"20","costNum":2037,"toClientNum":1800,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"hakata.ouzi_official","country":"日本","type":"pov","format":"TT","followers":"272","avgViews":"87","costNum":1630,"toClientNum":3000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"mari_0121","country":"日本","type":"颜值 舞蹈","format":"TT","followers":"472","avgViews":"47","costNum":3136,"toClientNum":4300,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"feyza.oen","country":"德国","type":"Couple","format":"TT","followers":"13.2","avgViews":"28","costNum":406,"toClientNum":1500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"acecend","country":"德国","type":"pov","format":"TT","followers":"90.9","avgViews":"52","costNum":1973,"toClientNum":3500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"rihad_rr","country":"法国","type":"Couple","format":"INS Reel,TT","followers":"244","avgViews":"22","costNum":500,"toClientNum":1200,"profitNum":0,"profitRateNum":0,"finalPush":"800 for tt+ig","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"rihad.re","country":"","type":"","format":"","followers":"12","avgViews":"9.8","costNum":0,"toClientNum":0,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"miyossy_films","country":"日本","type":"街拍萌妹子","format":"TT","followers":"92","avgViews":"43","costNum":500,"toClientNum":1500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"realjessifaust","country":"德国","type":"lifestyle","format":"TT","followers":"583.7","avgViews":"11","costNum":1315,"toClientNum":1800,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"flo.97x","country":"法国","type":"pov","format":"TT","followers":"243","avgViews":"10","costNum":1161,"toClientNum":1600,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"sabrin.amirii7","country":"德国","type":"lifestyle","format":"TT","followers":"553","avgViews":"264","costNum":5445,"toClientNum":7000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"youkyameg","country":"日本","type":"情侣","format":"TT","followers":"35","avgViews":"61","costNum":626,"toClientNum":950,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":true,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"pomi0423","country":"日本","type":"lifestyle","format":"TT","followers":"53","avgViews":"13","costNum":627,"toClientNum":1500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"hiro_akidayo","country":"日本","type":"街头采访","format":"TT","followers":"89.8","avgViews":"64","costNum":941,"toClientNum":2200,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"nakamuramura_ai","country":"日本","type":"pov","format":"TT","followers":"40","avgViews":"7.8","costNum":313,"toClientNum":1200,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"annanuriaa","country":"德国","type":"pov","format":"TT","followers":"12.6","avgViews":"14","costNum":1858,"toClientNum":2500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"kyopokokyopyo","country":"日本","type":"抽象 体育","format":"TT","followers":"21.8","avgViews":"30","costNum":502,"toClientNum":1500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"les2philanthropes","country":"法国","type":"自制动画；幽默","format":"TT","followers":"1000","avgViews":"56","costNum":2331,"toClientNum":3000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"shinshingodmt","country":"日本","type":"MBTI恋爱","format":"TT","followers":"10","avgViews":"33","costNum":188,"toClientNum":1200,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"tabun_konnakanzi","country":"日本","type":"恋爱短剧","format":"TT","followers":"291","avgViews":"199","costNum":4395,"toClientNum":6000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"psanimation3d3","country":"法国","type":"3D动画","format":"TT","followers":"99","avgViews":"156","costNum":815,"toClientNum":2000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"_tyoudoii_","country":"日本","type":"pov","format":"TT","followers":"23.1","avgViews":"66","costNum":660,"toClientNum":2000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"mkntbti30","country":"日本","type":"剧情","format":"TT","followers":"117","avgViews":"6.2","costNum":941,"toClientNum":1500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"o2_ozaki","country":"日本","type":"电影场景模仿；搞笑短剧","format":"TT","followers":"159","avgViews":"30","costNum":941,"toClientNum":2000,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"alihanxalihan","country":"德国","type":"lifestyle","format":"TT","followers":"52","avgViews":"15","costNum":350,"toClientNum":1200,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"careerpartners","country":"日本","type":"娱乐","format":"TT","followers":"176.7","avgViews":"170","costNum":1883,"toClientNum":3500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null},{"handle":"mertii520","country":"德国","type":"颜值 生活","format":"TT","followers":"471.4","avgViews":"52","costNum":4077,"toClientNum":5500,"profitNum":0,"profitRateNum":0,"finalPush":"","isClientSelected":false,"isConfirmed":false,"confCost":null,"confClient":null,"confProfit":null,"confRate":null}],"confirmed":[{"source":"good thing","cooperation":"四六分润","country":"美国","handle":"Rykky","link":"https://www.youtube.com/@ry2ky/videos","finalCost":1250,"clientPrice":2200,"profit":570,"profitRate":26},{"source":"good thing","cooperation":"四六分润","country":"日本","handle":"tamasoi7","link":"https://www.tiktok.com/@tamasoi7","finalCost":1000,"clientPrice":2000,"profit":600,"profitRate":30},{"source":"good thing","cooperation":"四六分润","country":"日本","handle":"_rikamania_","link":"https://www.tiktok.com/@_rikamania_","finalCost":400,"clientPrice":1500,"profit":660,"profitRate":44},{"source":"good thing","cooperation":"四六分润","country":"日本","handle":"oshi_kano","link":"https://www.tiktok.com/@oshi_kano","finalCost":1500,"clientPrice":2400,"profit":540,"profitRate":23},{"source":"good thing","cooperation":"四六分润","country":"日本","handle":"citron1120","link":"https://www.tiktok.com/@citron1120","finalCost":510,"clientPrice":1100,"profit":354,"profitRate":32},{"source":"good thing","cooperation":"四六分润","country":"德国","handle":"frecklesasmr","link":"https://www.youtube.com/@frecklesasmr/videos","finalCost":1500,"clientPrice":2000,"profit":300,"profitRate":15},{"source":"good thing","cooperation":"四六分润","country":"德国","handle":"lenny_mikuta","link":"https://www.tiktok.com/@lenny_mikuta","finalCost":1100,"clientPrice":2000,"profit":540,"profitRate":27},{"source":"good thing","cooperation":"四六分润","country":"法国","handle":"plpeyy","link":"https://www.tiktok.com/@plpeyy","finalCost":1500,"clientPrice":2500,"profit":600,"profitRate":24},{"source":"good thing","cooperation":"四六分润","country":"德国","handle":"trvstedsamy","link":"https://www.tiktok.com/@trvstedsamy","finalCost":2090,"clientPrice":2800,"profit":426,"profitRate":15},{"source":"good thing","cooperation":"四六分润","country":"日本","handle":"marumo666","link":"https://www.tiktok.com/@marumo666","finalCost":1569,"clientPrice":2250,"profit":409,"profitRate":18}]};
+;
+
+// ===== 更新 KPI =====
+function updateKPIs() {
+  var s = D.summary;
+  document.getElementById('kpi-submitted').textContent = s.totalSubmitted;
+  document.getElementById('kpi-selected').textContent = s.totalClientSelected;
+  document.getElementById('kpi-selected-sub').textContent = '占提报 ' + s.selectedRate + '%';
+  document.getElementById('kpi-confirmed').textContent = s.totalConfirmed;
+  document.getElementById('kpi-confirmed-sub').textContent = '占选中 ' + s.confirmedRate + '%';
+  document.getElementById('kpi-rate-sel').textContent = s.selectedRate + '%';
+  document.getElementById('kpi-rate-sel-sub').textContent = s.totalClientSelected + '/' + s.totalSubmitted + ' 提报';
+  document.getElementById('kpi-conf-client').textContent = '$' + s.confTotalClient.toLocaleString();
+  document.getElementById('kpi-conf-cost').textContent = '$' + s.confTotalCost.toLocaleString();
+  document.getElementById('kpi-conf-profit').textContent = '$' + s.confTotalProfit.toLocaleString();
+  document.getElementById('kpi-conf-rate').textContent = s.confAvgRate + '%';
+  document.getElementById('kpi-conf-rate-sub').textContent = s.confRateMin + '%~' + s.confRateMax + '%';
+  document.getElementById('kpi-week-client').textContent = '$' + (s.weekNewClient || 0).toLocaleString();
+  document.getElementById('kpi-week-client-sub').textContent = '本周 ' + (s.weekNewCount || 0) + ' 条确认';
+  document.getElementById('kpi-week-profit').textContent = '$' + (s.weekNewProfit || 0).toLocaleString();
+  document.getElementById('kpi-week-profit-sub').textContent = '本周新增利润';
+  document.getElementById('footer-rate').textContent = s.selectedRate;
+  document.getElementById('update-time').textContent = new Date().toLocaleString('zh-CN');
+  document.getElementById('footer-submitted').textContent = s.totalSubmitted;
+  document.getElementById('footer-confirmed').textContent = s.totalConfirmed;
+
+  // 确认明细表
+  var tbody = document.querySelector('#confirmed-table tbody');
+  tbody.innerHTML = D.confirmed.map(function(c) {
+    return '<tr><td>' + c.country + '</td><td><a href="' + c.link + '" target="_blank" style="color:#667eea">' + c.handle + '</a></td><td class="num">$' + c.finalCost.toLocaleString() + '</td><td class="num">$' + c.clientPrice.toLocaleString() + '</td><td class="num" style="color:#59a14f;font-weight:600">$' + c.profit.toLocaleString() + '</td><td class="num">' + c.profitRate + '%</td></tr>';
+  }).join('');
+}
+
+// ===== 颜色 =====
+var CC = { '日本':'#e15759','美国':'#4e79a7','德国':'#f28e2b','英国':'#59a14f','加拿大':'#76b7b2','阿联酋':'#b07aa1','澳大利亚':'#edc948','塞尔维亚':'#9c755f' };
+var COLORS = ['#667eea','#764ba2','#f28e2b','#59a14f','#e15759','#76b7b2','#b07aa1','#4e79a7','#9c755f','#edc948'];
+
+var charts = {};
+function dc(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function barChart(id, labels, values, label, colorMap) {
+  dc(id);
+  var bg = colorMap ? labels.map(function(l){ return colorMap[l] || COLORS[labels.indexOf(l) % COLORS.length]; }) : COLORS.slice(0, labels.length);
+  var ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ label: label, data: values, backgroundColor: bg, borderRadius: 5, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return v >= 1000 ? '$' + (v/1000).toFixed(0) + 'k' : '$' + v; } }, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
+    }
+  });
+}
+
+function dualBarChart(id, labels, vals1, label1, vals2, label2) {
+  dc(id);
+  var ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: label1, data: vals1, backgroundColor: '#4e79a7', borderRadius: 5, borderSkipped: false },
+        { label: label2, data: vals2, backgroundColor: '#e15759', borderRadius: 5, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyleWidth: 8, font: { size: 11 } } } },
+      scales: { y: { beginAtZero: true, ticks: { callback: function(v) { return v >= 1000 ? '$' + (v/1000).toFixed(0) + 'k' : '$' + v; } }, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
+    }
+  });
+}
+
+function stackedBarChart(id, labels, vals1, label1, vals2, label2) {
+  dc(id);
+  var ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: label1, data: vals1, backgroundColor: '#b0bec5', borderRadius: 0, borderSkipped: false },
+        { label: label2, data: vals2, backgroundColor: '#59a14f', borderRadius: 5, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, indexAxis: 'y',
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyleWidth: 8, font: { size: 11 } } } },
+      scales: { x: { stacked: true, beginAtZero: true, grid: { color: '#f0f0f0' } }, y: { stacked: true, grid: { display: false } } }
+    }
+  });
+}
+
+function horizontalBarChart(id, labels, values, label, colorMap) {
+  dc(id);
+  var bg = colorMap ? labels.map(function(l){ return colorMap[l] || COLORS[labels.indexOf(l) % COLORS.length]; }) : COLORS.slice(0, labels.length);
+  var ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: labels, datasets: [{ label: label, data: values, backgroundColor: bg, borderRadius: 5, borderSkipped: false }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { callback: function(v) { return '$' + v.toLocaleString(); } }, grid: { color: '#f0f0f0' } }, y: { grid: { display: false } } }
+    }
+  });
+}
+
+// ===== 渲染所有图表 =====
+function renderAllCharts() {
+  var countries = D.byCountry.sort(function(a,b){ return b.confirmed - a.confirmed || b.confProfit - a.confProfit; });
+  var cn = countries.map(function(c){ return c.name; });
+
+  // 1. 漏斗图：提报→选中→确认（三色堆叠水平柱状图）
+  dc('chart-funnel');
+  var funnelUnsel = countries.map(function(c){ return c.submitted - c.selected; });
+  var funnelSel = countries.map(function(c){ return c.selected - c.confirmed; });
+  var funnelConf = countries.map(function(c){ return c.confirmed; });
+  var ctx1 = document.getElementById('chart-funnel').getContext('2d');
+  charts['chart-funnel'] = new Chart(ctx1, {
+    type: 'bar',
+    data: {
+      labels: cn,
+      datasets: [
+        { label: '提报未选中', data: funnelUnsel, backgroundColor: '#e0e0e0', borderRadius: 0, borderSkipped: false },
+        { label: '选中未确认', data: funnelSel, backgroundColor: '#f28e2b', borderRadius: 0, borderSkipped: false },
+        { label: '已确认', data: funnelConf, backgroundColor: '#59a14f', borderRadius: 5, borderSkipped: false }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, indexAxis: 'y',
+      plugins: { legend: { position: 'top', labels: { usePointStyle: true, pointStyleWidth: 8, font: { size: 11 } } } },
+      scales: { x: { stacked: true, beginAtZero: true, grid: { color: '#f0f0f0' } }, y: { stacked: true, grid: { display: false } } }
+    }
+  });
+
+  // 2. 各国确认合作率（确认/选中）
+  dc('chart-select-rate');
+  var ctx2 = document.getElementById('chart-select-rate').getContext('2d');
+  var crRates = countries.map(function(c){ return c.selected > 0 ? c.confRate : 0; });
+  var crColors = countries.map(function(c){ return CC[c.name] || '#999'; });
+  charts['chart-select-rate'] = new Chart(ctx2, {
+    type: 'bar',
+    data: { labels: cn, datasets: [{ label: '确认率 (%)', data: crRates, backgroundColor: crColors, borderRadius: 5, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { beginAtZero: true, max: Math.ceil(Math.max.apply(null, crRates) / 5) * 5 + 5, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } }
+    }
+  });
+
+  // 3. 确认合作明细图：利润 vs 成本 vs 对客
+  var handles = D.confirmed.map(function(c){ return c.handle; });
+  dualBarChart('chart-conf-detail', handles,
+    D.confirmed.map(function(c){ return c.clientPrice; }), '对客价',
+    D.confirmed.map(function(c){ return c.finalCost; }), '最终成本'
+  );
+
+  // 4. 各国确认利润
+  barChart('chart-country-conf', cn, countries.map(function(c){ return c.confProfit; }), '利润 (USD)', CC);
+
+  // 5. 选中 vs 确认 对客金额对比
+  dualBarChart('chart-sub-vs-conf', cn,
+    countries.map(function(c){ return c.selClient || 0; }), '选中对客',
+    countries.map(function(c){ return c.confClient; }), '确认对客'
+  );
+}
+
+// ===== 初始化 =====
+updateKPIs();
+_chartMetrics = true;
+if (typeof Chart !== 'undefined') renderAllCharts();
+</script>
+</body>
+</html>
