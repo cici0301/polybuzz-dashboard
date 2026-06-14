@@ -170,6 +170,39 @@ const D = {"summary": {"totalSubmitted": 255, "totalClientSelected": 39, "totalC
 }
 
 // ===== 颜色 =====
+// ===== 更新 KPI =====
+function updateKPIs() {
+  var s = D.summary;
+  document.getElementById('kpi-submitted').textContent = s.totalSubmitted;
+  document.getElementById('kpi-selected').textContent = s.totalClientSelected;
+  document.getElementById('kpi-selected-sub').textContent = '占提报 ' + s.selectedRate + '%';
+  document.getElementById('kpi-confirmed').textContent = s.totalConfirmed;
+  document.getElementById('kpi-confirmed-sub').textContent = '占选中 ' + s.confirmedRate + '%';
+  document.getElementById('kpi-rate-sel').textContent = s.selectedRate + '%';
+  document.getElementById('kpi-rate-sel-sub').textContent = s.totalClientSelected + '/' + s.totalSubmitted + ' 提报';
+  document.getElementById('kpi-conf-client').textContent = '$' + s.confTotalClient.toLocaleString();
+  document.getElementById('kpi-conf-cost').textContent = '$' + s.confTotalCost.toLocaleString();
+  document.getElementById('kpi-conf-profit').textContent = '$' + s.confTotalProfit.toLocaleString();
+  document.getElementById('kpi-conf-rate').textContent = s.confAvgRate + '%';
+  document.getElementById('kpi-conf-rate-sub').textContent = s.confRateMin + '%~' + s.confRateMax + '%';
+  document.getElementById('kpi-week-client').textContent = '$' + (s.weekNewClient || 0).toLocaleString();
+  document.getElementById('kpi-week-client-sub').textContent = '本周 ' + (s.weekNewCount || 0) + ' 条确认';
+  document.getElementById('kpi-week-profit').textContent = '$' + (s.weekNewProfit || 0).toLocaleString();
+  document.getElementById('kpi-week-profit-sub').textContent = '本周新增利润';
+  document.getElementById('footer-rate').textContent = s.selectedRate;
+  document.getElementById('update-time').textContent = new Date().toLocaleString('zh-CN');
+  document.getElementById('footer-submitted').textContent = s.totalSubmitted;
+  document.getElementById('footer-confirmed').textContent = s.totalConfirmed;
+
+  // 确认明细表
+  var tbody = document.querySelector('#confirmed-table tbody');
+  if (tbody) {
+    tbody.innerHTML = D.confirmed.map(function(c) {
+      return '<tr><td>' + c.country + '</td><td><a href="' + c.link + '" target="_blank" style="color:#667eea">' + c.handle + '</a></td><td class="num">$' + c.finalCost.toLocaleString() + '</td><td class="num">$' + c.clientPrice.toLocaleString() + '</td><td class="num" style="color:#59a14f;font-weight:600">$' + c.profit.toLocaleString() + '</td><td class="num">' + c.profitRate + '%</td></tr>';
+    }).join('');
+  }
+}
+
 var CC = { '日本':'#e15759','美国':'#4e79a7','德国':'#f28e2b','英国':'#59a14f','加拿大':'#76b7b2','阿联酋':'#b07aa1','澳大利亚':'#edc948','塞尔维亚':'#9c755f' };
 var COLORS = ['#667eea','#764ba2','#f28e2b','#59a14f','#e15759','#76b7b2','#b07aa1','#4e79a7','#9c755f','#edc948'];
 
